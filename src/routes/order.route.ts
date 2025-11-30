@@ -1,8 +1,16 @@
 import { Hono } from "hono";
+import { validate } from '@/utils/request-validator';
 import { orderController } from "@/controllers/order.controller";
+import { orderSchema } from "@/schema/order.schema";
 
 const orderRouter = new Hono();
 
-orderRouter.post("/", orderController.createOrder);
+orderRouter.get("/", (c) => c.text("Order API is working"));
+
+orderRouter.post(
+    "/",
+    validate('json', orderSchema),
+    orderController.createOrder
+);
 
 export default orderRouter;

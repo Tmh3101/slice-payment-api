@@ -1,3 +1,4 @@
+import 'dotenv/config'
 import { serve } from '@hono/node-server'
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
@@ -13,18 +14,14 @@ app.use(cors())
 app.use(honoLogger())
 app.use(prettyJSON())
 
-app.get('/', (c) => {
-  return c.text('Hello Hono!')
-})
+app.get('/', (c) => c.text('Hello Slice Payment API!'))
 
 app.route('/api/orders', orderRouter)
 
 app.notFound(notFoundHandler);
 app.onError(globalErrorHandler);
 
-serve({
-  fetch: app.fetch,
-  port: 3000
-}, (info) => {
+const port = Number(process.env.PORT ?? 3000);
+serve({ fetch: app.fetch, port }, (info) => {
   logger.info(`Server running on http://localhost:${info.port}`)
 })

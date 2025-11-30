@@ -27,6 +27,17 @@ export const successResponse = ({ c, data, message = 'Success', status = 200 }: 
   );
 };
 
+export const createdResponse = ({ c, data, message = 'Resource created successfully' }: SuccessResponseParams) => {
+  return c.json(
+    {
+      success: true,
+      message,
+      data,
+    },
+    201
+  );
+};
+
 export const errorResponse = ({ c, message, status = 500, errorCode, error }: ErrorResponseParams) => {
   return c.json(
     {
