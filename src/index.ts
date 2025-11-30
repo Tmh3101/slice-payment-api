@@ -4,6 +4,7 @@ import { cors } from 'hono/cors'
 import { logger as honoLogger } from 'hono/logger'
 import { prettyJSON } from 'hono/pretty-json'
 import { logger } from '@/utils/logger'
+import { globalErrorHandler, notFoundHandler } from './middlewares/error-handler';
 import orderRouter from '@/routes/order.route'
 
 const app = new Hono()
@@ -17,6 +18,9 @@ app.get('/', (c) => {
 })
 
 app.route('/api/orders', orderRouter)
+
+app.notFound(notFoundHandler);
+app.onError(globalErrorHandler);
 
 serve({
   fetch: app.fetch,
