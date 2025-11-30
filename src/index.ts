@@ -4,6 +4,7 @@ import { cors } from 'hono/cors'
 import { logger as honoLogger } from 'hono/logger'
 import { prettyJSON } from 'hono/pretty-json'
 import { logger } from '@/utils/logger'
+import orderRouter from '@/routes/order.route'
 
 const app = new Hono()
 
@@ -14,6 +15,8 @@ app.use(prettyJSON())
 app.get('/', (c) => {
   return c.text('Hello Hono!')
 })
+
+app.route('/api/orders', orderRouter)
 
 serve({
   fetch: app.fetch,
