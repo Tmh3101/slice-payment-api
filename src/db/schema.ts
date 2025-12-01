@@ -29,20 +29,23 @@ export const orderSchema = paymentDB.table("order", {
 });
 
 export const paymentSchema = paymentDB.table("payment", {
-  id: uuid("id").primaryKey().defaultRandom(),
+  id: varchar("id", { length: 36 }).primaryKey(), // DNPAY Payment Intent ID
+  provider: text("provider").default(PaymentProvider.DNPAY),
+
   appSessionId: uuid("app_session_id").notNull(), // // Session ID from provider app
+  currency: varchar("currency", { length: 10 }).notNull(), // VNDC or USDT
+  amount: numeric("amount", { precision: 78, scale: 0 }).notNull(), // Amount to pay in smallest unit of the currency
+  status: text("status").notNull(),
+  clientSecret: text("client_secret").notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+
+  transactionHash: varchar("transaction_hash", { length: 66 }),
 
   orderId: varchar("order_id", { length: 15 })
     .notNull()
     .references(() => orderSchema.id, { onDelete: 'cascade' }),
 
-  provider: text("provider").default(PaymentProvider.DNPAY),
-  currency: varchar("currency", { length: 10 }).notNull(), // VNDC or USDT
-  amount: numeric("amount", { precision: 78, scale: 0 }).notNull(), // Amount to pay in smallest unit of the currency
-  transactionHash: varchar("transaction_hash", { length: 66 }),
-
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => new Date())
+  createdAt: timestamp("created_at").notNull(),
 }, (table) => {
   return {
     orderIdx: index("payment_order_idx").on(table.orderId),

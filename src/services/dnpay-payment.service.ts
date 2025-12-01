@@ -19,7 +19,7 @@ const createPayment = async (paymentData: PaymentData) => {
         });
 
         const newPayment = {
-            // id: paymentIntent.id,
+            id: paymentIntent.id,
             orderId: paymentData.orderId,
             appSessionId: paymentData.appSessionId,
             currency: paymentData.currency,
