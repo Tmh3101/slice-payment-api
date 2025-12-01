@@ -1,4 +1,4 @@
-import { uuid, text, bigint, varchar, numeric, timestamp, unique, index } from "drizzle-orm/pg-core";
+import { uuid, text, varchar, numeric, timestamp, index } from "drizzle-orm/pg-core";
 import { paymentDB } from "./utils"
 
 export enum OrderStatus {

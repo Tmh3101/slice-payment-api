@@ -48,6 +48,8 @@ const makeDNPAYPaymentRequest = async <T>(
             'X-Nonce': nonce,
         };
 
+        logger.info({ endpoint, method, body, headers }, 'DNPAY Payment Request:');
+
         return httpClient<T>(`${envConfig.DNPAY_API_URL}${endpoint}`, {
             method,
             headers,

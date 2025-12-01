@@ -18,6 +18,8 @@ const createPayment = async (paymentData: PaymentData) => {
             }
         });
 
+        logger.info({ detail: paymentIntent }, 'DNPAY Payment Intent Created:');
+
         const newPayment = {
             id: paymentIntent.id,
             orderId: paymentData.orderId,

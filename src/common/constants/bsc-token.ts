@@ -1,21 +1,21 @@
 import { envConfig } from "@/config/env";
 
-const RYF = {
+export const RYF = {
     mainnet: {
         name: "Rise Your Future",
         symbol: "RYF",
-        address: "0x93198F5e56443286b50Cf749dFb6A27f251aA630",
+        address: "0xF9965785630FFC1AE6F1D1EDB7339c1Fe4FAEaa5",
         decimals: 18,
     },
     testnet: {
         name: "Testnet Rise Your Future",
         symbol: "tRYF",
-        address: "0x7326D8584c6b891B2f4B194CDF5ba746dD0D4080",
+        address: "0x296fEF759bD54328236b8877Dad24e7aB70a1BC4",
         decimals: 18,
     }
 }
 
-const USDT = {
+export const USDT = {
     mainnet: {
         name: "Tether USD",
         symbol: "USDT",
@@ -30,7 +30,7 @@ const USDT = {
     }
 }
 
-const VNDC = {
+export const VNDC = {
     mainnet: {
         name: "VNDC Token",
         symbol: "VNDC",
@@ -40,10 +40,19 @@ const VNDC = {
     testnet: {
         name: "VNDC Token",
         symbol: "VNDC",
-        address: "0x63439b511170a735ff1fea9b38f71c57e67ccbd9",
+        address: "0x63439B511170A735ff1fEA9b38f71C57E67cCBd9",
         decimals: 0,
     }
 };
+
+export const WBNB = {
+    mainnet: {
+        name: "Wrapped BNB",
+        symbol: "WBNB",
+        address: "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c",
+        decimals: 18,
+    },
+}
 
 export const RYF_TOKEN = envConfig.IS_MAINNET ? RYF.mainnet : RYF.testnet;
 export const USDT_TOKEN = envConfig.IS_MAINNET ? USDT.mainnet : USDT.testnet;

@@ -7,10 +7,16 @@ import { AppError } from "@/utils/app.error";
 import { logger } from "@/utils/logger";
 import { OrderData, OrderCreationResponse } from "@/types";
 import { getPaymentAmount } from '@/utils/price-oracle';
+import { RYF_TOKEN } from "@/common/constants/bsc-token";
 
 const createOrder = async (orderData: OrderData): Promise<OrderCreationResponse> => {
     try {
         const orderId = generateOrderId();
+
+        if (!orderData.tokenAddress) {
+            orderData.tokenAddress = RYF_TOKEN.address;
+        }
+
         const newOrder = {
             id: orderId,
             email: orderData.email,
@@ -18,12 +24,14 @@ const createOrder = async (orderData: OrderData): Promise<OrderCreationResponse>
             amount: orderData.amount.toString(),
         };
 
-        await db.insert(orderSchema).values(newOrder);
-
         const { formattedAmountIn: paymentAmount } = await getPaymentAmount(
             orderData.amount.toString(),
             orderData.currency
         );
+        
+        logger.info(`Calculated payment amount: ${paymentAmount} ${orderData.currency} for order ID: ${orderId}`);
+
+        await db.insert(orderSchema).values(newOrder);
         
         const newPayment = await dnpayPaymentService.createPayment({
             orderId: orderId,

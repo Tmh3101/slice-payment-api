@@ -1,48 +1,96 @@
-import { parseUnits, formatUnits } from 'viem';
-import { publicClient } from '@/config/bsc-client';
-import { PANCAKE_ROUTER_V2_ADDRESS } from '@/common/constants/contracts';
-import { ROUTER_ABI } from '@/common/abi/router-abi';
-import { RYF_TOKEN, USDT_TOKEN, VNDC_TOKEN } from '@/common/constants/bsc-token';
+import { parseUnits } from 'viem';
+import { RYF, USDT, VNDC } from '@/common/constants/bsc-token';
+import { logger } from '@/utils/logger';
+
+interface DexScreenerResponse {
+    pairs: {
+        priceUsd: string;
+        baseToken: { address: string; symbol: string };
+        quoteToken: { address: string; symbol: string };
+        liquidity?: { usd: number };
+    }[];
+}
 
 const getTokenByCurrency = (currency: string) => {
-    if (currency.toUpperCase() === 'USDT') {
-        return USDT_TOKEN;
+    if (currency.toUpperCase() === 'USDT') return USDT.mainnet;
+    return VNDC.mainnet;
+};
+
+const DEXSCREENER_API_URL = 'https://api.dexscreener.com/latest/dex/tokens';
+const SIGNAL_TIMEOUT_MS = 5000;
+const FALLBACK_VNDC_USD_RATE = 27000; // 1 USD = 27,000 VNDC
+
+const getPriceUsdFromDexScreener = async (address: string): Promise<number> => {
+    try {
+        const res = await fetch(
+            `${DEXSCREENER_API_URL}/${address}`,
+            {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
+                signal: AbortSignal.timeout(SIGNAL_TIMEOUT_MS)
+            }
+        );
+
+        if (!res.ok) throw new Error(`API Error: ${res.statusText}`);
+
+        const data = (await res.json()) as DexScreenerResponse;
+        const pairs = data.pairs || [];
+        if (pairs.length === 0) return 0;
+
+        // Sắp xếp lấy cặp có thanh khoản USD cao nhất để giá chuẩn nhất
+        pairs.sort((a, b) => (b.liquidity?.usd || 0) - (a.liquidity?.usd || 0));
+        const bestPair = pairs[0];
+        const price = parseFloat(bestPair.priceUsd);
+        
+        return isNaN(price) ? 0 : price;
+    } catch (error) {
+        logger.error({ address, error }, 'Failed to fetch DexScreener Price');
+        return 0;
     }
-    return VNDC_TOKEN;
 };
 
 export const getPaymentAmount = async (amountRYF: string, currency: string) => {
+    const paymentToken = getTokenByCurrency(currency);
+    const isVNDC = currency.toUpperCase() === 'VNDC';
+
+    logger.info(`[Oracle API] Calculating: ${amountRYF} RYF -> ${currency}`);
     try {
-        const amountOutWei = parseUnits(amountRYF, RYF_TOKEN.decimals);
-        const paymentToken = getTokenByCurrency(currency);
+        const ryfPriceUsd = await getPriceUsdFromDexScreener(RYF.mainnet.address);
         
-        // Xây dựng đường dẫn Swap (Path)
-        // Nếu RYF và USDT có pool trực tiếp: [USDT, RYF]
-        // Nếu không có pool trực tiếp mà qua BNB: [USDT, WBNB, RYF]
-        // An toàn nhất thường là đi qua WBNB nếu thanh khoản nhỏ, nhưng giả sử có pool trực tiếp:
-        const path = [paymentToken.address, RYF_TOKEN.address] as `0x${string}`[];
+        if (ryfPriceUsd === 0) {
+            throw new Error('Unable to fetch RYF price from DexScreener.');
+        }
 
-        // Gọi Smart Contract
-        const data = await publicClient.readContract({
-            address: PANCAKE_ROUTER_V2_ADDRESS,
-            abi: ROUTER_ABI,
-            functionName: 'getAmountsIn',
-            args: [amountOutWei, path],
-        });
+        let rateToPaymentToken = 1;
+        if (isVNDC) {
+            const vndcPriceUsd = await getPriceUsdFromDexScreener(VNDC.mainnet.address);
+            if (vndcPriceUsd === 0) {
+                logger.warn('API VNDC failed, using fallback rate 27,000');
+                rateToPaymentToken = FALLBACK_VNDC_USD_RATE; 
+            } else {
+                rateToPaymentToken = 1 / vndcPriceUsd;
+            }
+        }
 
-        // data trả về mảng [amountIn, amountOut]
-        // amountIn chính là số USDT cần phải trả
-        const amountInWei = data[0];
+        const totalUsdNeeded = Number(amountRYF) * ryfPriceUsd;
+        const totalPay = totalUsdNeeded * rateToPaymentToken;
+        const finalRate = totalPay / Number(amountRYF);
 
-        // Trả về Raw BigInt để lưu DB chính xác, và format string để log/hiển thị
-        // USDT thường là 18 decimals trên BSC (check kỹ contract USDT bạn dùng)
+        const displayDecimals = isVNDC ? 0 : 6;
+        const formattedTotal = totalPay.toFixed(displayDecimals);
+        const rawAmountIn = parseUnits(totalPay.toFixed(paymentToken.decimals), paymentToken.decimals);
+
+        logger.info(`   > Price Ref: 1 RYF = $${ryfPriceUsd} ${isVNDC ? `= ${(1 / ryfPriceUsd * rateToPaymentToken).toFixed(2)} VNDC` : ''}`);
+        logger.info(`   > Final Bill: ${amountRYF} RYF = ${formattedTotal} ${currency}`);
+
         return {
-            rawAmountIn: amountInWei, 
-            formattedAmountIn: formatUnits(amountInWei, paymentToken.decimals), 
-            rate: Number(formatUnits(amountInWei, paymentToken.decimals)) / Number(amountRYF) // Tỷ giá tham khảo 1 RYF = ? USDT
+            rawAmountIn: rawAmountIn,
+            formattedAmountIn: formattedTotal,
+            rate: finalRate,
+            currency: currency
         };
-
-    } catch (error) {
-        throw new Error('Không thể lấy tỷ giá hiện tại từ Blockchain');
+    } catch (error: any) {
+        logger.error({ detail: error.message }, 'Price Oracle Error');
+        throw new Error('Failed to get payment amount from price oracle.');
     }
 };

@@ -18,7 +18,7 @@ app.use(prettyJSON())
 app.get('/', (c) => c.text('Hello Slice Payment API!'))
 
 app.route('/api/orders', orderRouter)
-app.route('/api/dnpay-payments', dnpayPaymentRoute)
+app.route('/api/dnpay-payment', dnpayPaymentRoute)
 
 app.notFound(notFoundHandler);
 app.onError(globalErrorHandler);
