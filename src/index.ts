@@ -7,6 +7,7 @@ import { prettyJSON } from 'hono/pretty-json'
 import { logger } from '@/utils/logger'
 import { globalErrorHandler, notFoundHandler } from './middlewares/error-handler';
 import orderRouter from '@/routes/order.route'
+import dnpayPaymentRoute from '@/routes/dnpay-payment.route'
 
 const app = new Hono()
 
@@ -17,6 +18,7 @@ app.use(prettyJSON())
 app.get('/', (c) => c.text('Hello Slice Payment API!'))
 
 app.route('/api/orders', orderRouter)
+app.route('/api/dnpay-payments', dnpayPaymentRoute)
 
 app.notFound(notFoundHandler);
 app.onError(globalErrorHandler);

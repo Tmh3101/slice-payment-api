@@ -1,14 +1,14 @@
-import {
-    CreateDNPAYPaymentIntent,
-    DNPAYPaymentIntentResponse
-} from "./interfaces/create-payment";
 import { httpClient } from "@/lib/http-client";
 import { envConfig } from "@/config/env";
 import { logger } from "@/utils/logger";
 import { generateHmacSignature } from "@/utils/signature-generator";
 import { DNPAYException } from "@/exceptions/dnpay.exception";
+import {
+    DNPAYPaymentIntentRequest,
+    DNPAYPaymentIntentResponse
+} from "@/types";
 
-const createDNPAYPaymentIntent = async (payload: CreateDNPAYPaymentIntent) => {
+const createDNPAYPaymentIntent = async (payload: DNPAYPaymentIntentRequest) => {
     try {
         return makeDNPAYPaymentRequest<DNPAYPaymentIntentResponse>(
             '/v1/payment_intents',
@@ -59,6 +59,6 @@ const makeDNPAYPaymentRequest = async <T>(
     }
 }
 
-export const dnpayPaymentService = {
+export const dnpayService = {
     createDNPAYPaymentIntent,
 };

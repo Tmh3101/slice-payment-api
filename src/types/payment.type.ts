@@ -1,18 +1,26 @@
-interface PaymentMetadata {
+export type PaymentMetadata = {
     orderId: string;
     email: string;
     tokenAddress: string;
     amount: string;
 }
 
-export interface CreateDNPAYPaymentIntent {
+export type PaymentData = {
+    orderId: string;
+    appSessionId: string;
+    currency: string;
+    amount: number;
+    metadata: PaymentMetadata;
+}
+
+export type DNPAYPaymentIntentRequest = {
     amount: number;
     currency: string;
     appSessionId: string;
     metadata: PaymentMetadata;
 }
 
-export interface DNPAYPaymentIntentResponse {
+export type DNPAYPaymentIntentResponse = {
     id: string;
     amount: number;
     status: string;
