@@ -6,6 +6,7 @@ import { DNPAYException } from "@/exceptions/dnpay.exception";
 import { AppError } from "@/utils/app.error";
 import { logger } from "@/utils/logger";
 import { OrderData, OrderCreationResponse } from "@/types";
+import { getPaymentAmount } from '@/utils/price-oracle';
 
 const createOrder = async (orderData: OrderData): Promise<OrderCreationResponse> => {
     try {
@@ -19,12 +20,16 @@ const createOrder = async (orderData: OrderData): Promise<OrderCreationResponse>
 
         await db.insert(orderSchema).values(newOrder);
 
-        const paymentAmount = 1000000; // TODO: calculate payment amount based on order amount and exchange rate
+        const { formattedAmountIn: paymentAmount } = await getPaymentAmount(
+            orderData.amount.toString(),
+            orderData.currency
+        );
+        
         const newPayment = await dnpayPaymentService.createPayment({
             orderId: orderId,
             appSessionId: orderData.appSessionId,
             currency: orderData.currency,
-            amount: paymentAmount,
+            amount: Number(paymentAmount),
             metadata: {
                 orderId: orderId,
                 email: orderData.email,
