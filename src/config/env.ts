@@ -17,4 +17,6 @@ export const envConfig = {
   DNPAY_API_KEY: process.env.DNPAY_API_KEY,
   DNPAY_API_SECRET: process.env.DNPAY_API_SECRET,
   DNPAY_WEBHOOK_SECRET: process.env.DNPAY_WEBHOOK_SECRET,
+
+  ADMIN_PRIVATE_KEY: process.env.ADMIN_PRIVATE_KEY!,
 };

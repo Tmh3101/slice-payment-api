@@ -4,6 +4,7 @@ import { paymentSchema, orderSchema, OrderStatus } from "@/db/schema";
 import { DNPAYException } from "@/exceptions/dnpay.exception";
 import { AppError } from "@/utils/app.error";
 import { dnpayService } from "@/core/dnpay/dnpay.service";
+import { ryfTokenService } from "@/core/token/ryf-token.service";
 import { logger } from "@/utils/logger";
 import { PaymentData } from "@/types";
 import { DNPAY_PAYMENT_STATUS } from "@/common/constants/dnpay-payment-status";
@@ -99,19 +100,30 @@ const confirmDNPAYPayment = async (paymentId: string, payload: any, user: AppVar
             clientSecret: payload.clientSecret
         });
 
-        if (confirmationResponse.status === DNPAY_PAYMENT_STATUS.SUCCEEDED) {
-            await db.update(paymentSchema)
-                .set({ status: confirmationResponse.status })
-                .where(eq(paymentSchema.id, paymentId));
-
-            await db.update(orderSchema)
-                .set({ status: OrderStatus.COMPLETED })
-                .where(eq(orderSchema.id, payment.orderId));
-                
-            logger.info({ detail: { status: confirmationResponse.status } }, `Payment ${paymentId} confirmed successfully.`);
+        if (confirmationResponse.status !== DNPAY_PAYMENT_STATUS.SUCCEEDED) {
+            throw new AppError(400, `Payment confirmation failed for payment ID ${paymentId}`);
         }
 
-        return confirmationResponse;
+        await db.update(paymentSchema)
+            .set({ status: confirmationResponse.status })
+            .where(eq(paymentSchema.id, paymentId));
+
+        const transferData = await ryfTokenService.transferTokenToUser({
+            orderId: order.id,
+            amount: order.amount,
+            toAddress: order.userWalletAddress as `0x${string}`
+        });
+
+        await db.update(orderSchema)
+            .set({ status: OrderStatus.COMPLETED })
+            .where(eq(orderSchema.id, payment.orderId));
+            
+        logger.info({ detail: { status: confirmationResponse.status } }, `Payment ${paymentId} confirmed successfully.`);
+
+        return {
+            ...confirmationResponse,
+            txHash: transferData.txHash
+        };
     } catch (error) {
         logger.error({ detail: error }, 'Confirm Payment Error:');
         throw error;

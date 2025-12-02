@@ -1,4 +1,4 @@
-import { uuid, text, varchar, numeric, timestamp, index } from "drizzle-orm/pg-core";
+import { uuid, text, varchar, numeric, timestamp, index, primaryKey } from "drizzle-orm/pg-core";
 import { paymentDB } from "./utils"
 
 export enum OrderStatus {
@@ -29,6 +29,18 @@ export const orderSchema = paymentDB.table("order", {
   };
 });
 
+export const transferSchema = paymentDB.table("transfer", {
+  orderId: varchar("order_id", { length: 15 })
+    .notNull()
+    .references(() => orderSchema.id, { onDelete: 'cascade' }),
+  txHash: varchar("tx_hash", { length: 66 }).notNull(),
+  blockNumber: numeric("block_number", { precision: 78, scale: 0 }).notNull(),
+}, (table) => {
+  return {
+    pk: primaryKey({ columns: [table.orderId, table.txHash] }),
+  };
+});
+
 export const paymentSchema = paymentDB.table("payment", {
   id: varchar("id", { length: 36 }).primaryKey(), // DNPAY Payment Intent ID
   provider: text("provider").default(PaymentProvider.DNPAY),
@@ -51,4 +63,5 @@ export const paymentSchema = paymentDB.table("payment", {
 })
 
 export type Order = typeof orderSchema.$inferSelect;
+export type Transfer = typeof transferSchema.$inferSelect;
 export type Payment = typeof paymentSchema.$inferSelect;

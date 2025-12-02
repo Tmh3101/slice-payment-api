@@ -14,18 +14,6 @@ export type PaymentData = {
     metadata: PaymentMetadata;
 }
 
-export type DNPAYPaymentCreationRequest = {
-    amount: number;
-    currency: string;
-    appSessionId: string;
-    metadata: PaymentMetadata;
-}
-
-export type DNPAYPaymentConfirmationRequest = {
-    paymentId: string;
-    clientSecret: string;
-}
-
 export type DNPAYPaymentResponse = {
     id: string;
     amount: number;
@@ -37,6 +25,22 @@ export type DNPAYPaymentResponse = {
     expiresAt: string;
 }
 
+export type DNPAYPaymentCreationRequest = {
+    amount: number;
+    currency: string;
+    appSessionId: string;
+    metadata: PaymentMetadata;
+}
+
 export type DNPAYPaymentCreationResponse = {
     appSessionId: string;
+} & DNPAYPaymentResponse;
+
+export type DNPAYPaymentConfirmationRequest = {
+    paymentId: string;
+    clientSecret: string;
+}
+
+export type DNPAYPaymentConfirmationResponse = {
+    txHash: string;
 } & DNPAYPaymentResponse;
