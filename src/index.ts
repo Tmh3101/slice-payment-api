@@ -5,7 +5,6 @@ import { cors } from 'hono/cors'
 import { logger as honoLogger } from 'hono/logger'
 import { prettyJSON } from 'hono/pretty-json'
 import { logger } from '@/utils/logger'
-import { authMiddleware } from './middlewares/auth.middleware';
 import { globalErrorHandler, notFoundHandler } from './middlewares/error-handler';
 import orderRouter from '@/routes/order.route'
 import dnpayPaymentRoute from '@/routes/dnpay-payment.route'
@@ -15,7 +14,7 @@ const app = new Hono()
 app.use(cors())
 app.use(honoLogger())
 app.use(prettyJSON())
-app.use(authMiddleware)
+
 app.get('/', (c) => c.text('Hello Slice Payment API!'))
 
 app.route('/api/orders', orderRouter)
