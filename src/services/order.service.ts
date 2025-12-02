@@ -10,7 +10,10 @@ import { getPaymentAmount } from '@/utils/price-oracle';
 import { RYF_TOKEN } from "@/common/constants/bsc-token";
 import { AppVariables } from "@/types";
 
-const createOrder = async (orderData: OrderData, user: AppVariables['user']): Promise<OrderCreationResponse> => {
+const createOrder = async (
+    orderData: OrderData,
+    user: AppVariables['user']
+): Promise<OrderCreationResponse> => {
     try {
         const orderId = generateOrderId();
 
@@ -18,10 +21,12 @@ const createOrder = async (orderData: OrderData, user: AppVariables['user']): Pr
             orderData.tokenAddress = RYF_TOKEN.address;
         }
 
+        console.log('Creating order for user:', user);
+
         const newOrder = {
             id: orderId,
             email: user.email,
-            userWalletAddress: orderData.walletAddress,
+            userWalletAddress: orderData.userWalletAddress,
             tokenAddress: orderData.tokenAddress,
             amount: orderData.amount.toString(),
         };
@@ -31,7 +36,9 @@ const createOrder = async (orderData: OrderData, user: AppVariables['user']): Pr
             orderData.currency
         );
         
-        logger.info(`Calculated payment amount: ${paymentAmount} ${orderData.currency} for order ID: ${orderId}`);
+        logger.info(
+            `Calculated payment amount: ${paymentAmount} ${orderData.currency} for order ID: ${orderId}`
+        );
         
         const { clientSecret, payment: newPayment } = await dnpayPaymentService.createPayment({
             orderId: orderId,
@@ -41,7 +48,7 @@ const createOrder = async (orderData: OrderData, user: AppVariables['user']): Pr
             metadata: {
                 orderId: orderId,
                 email: user.email,
-                walletAddress: orderData.walletAddress,
+                userWalletAddress: orderData.userWalletAddress,
                 tokenAddress: orderData.tokenAddress,
                 amount: orderData.amount.toString(),
             }

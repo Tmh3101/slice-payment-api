@@ -1,14 +1,23 @@
 import { parseUnits } from 'viem';
 import { RYF, USDT, VNDC } from '@/common/constants/bsc-token';
+import {
+    GECKO_API_URL,
+    SIGNAL_TIMEOUT_MS,
+    FALLBACK_VNDC_USD_RATE
+} from '@/common/constants/oracle';
 import { logger } from '@/utils/logger';
 
-interface DexScreenerResponse {
-    pairs: {
-        priceUsd: string;
-        baseToken: { address: string; symbol: string };
-        quoteToken: { address: string; symbol: string };
-        liquidity?: { usd: number };
-    }[];
+interface GeckoTerminalResponse {
+    data: {
+        id: string;
+        type: string;
+        attributes: {
+            name: string;
+            symbol: string;
+            decimals: number;
+            price_usd: string | null;
+        };
+    };
 }
 
 const getTokenByCurrency = (currency: string) => {
@@ -16,35 +25,31 @@ const getTokenByCurrency = (currency: string) => {
     return VNDC.mainnet;
 };
 
-const DEXSCREENER_API_URL = 'https://api.dexscreener.com/latest/dex/tokens';
-const SIGNAL_TIMEOUT_MS = 5000;
-const FALLBACK_VNDC_USD_RATE = 27000; // 1 USD = 27,000 VNDC
-
-const getPriceUsdFromDexScreener = async (address: string): Promise<number> => {
+const getPriceUsdFromGecko = async (address: string): Promise<number> => {
     try {
-        const res = await fetch(
-            `${DEXSCREENER_API_URL}/${address}`,
-            {
-                method: 'GET',
-                headers: { 'Content-Type': 'application/json' },
-                signal: AbortSignal.timeout(SIGNAL_TIMEOUT_MS)
-            }
-        );
+        const url = `${GECKO_API_URL}/${address}`;
+        const res = await fetch(url, {
+            method: 'GET',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            signal: AbortSignal.timeout(SIGNAL_TIMEOUT_MS)
+        });
 
-        if (!res.ok) throw new Error(`API Error: ${res.statusText}`);
+        if (!res.ok) {
+            logger.warn(`Gecko API returned status: ${res.status} for ${address}`);
+            return 0;
+        }
 
-        const data = (await res.json()) as DexScreenerResponse;
-        const pairs = data.pairs || [];
-        if (pairs.length === 0) return 0;
+        const json = (await res.json()) as GeckoTerminalResponse;
+        const priceString = json.data?.attributes?.price_usd;
+        if (!priceString) return 0;
 
-        // Sắp xếp lấy cặp có thanh khoản USD cao nhất để giá chuẩn nhất
-        pairs.sort((a, b) => (b.liquidity?.usd || 0) - (a.liquidity?.usd || 0));
-        const bestPair = pairs[0];
-        const price = parseFloat(bestPair.priceUsd);
-        
+        const price = parseFloat(priceString);
         return isNaN(price) ? 0 : price;
     } catch (error) {
-        logger.error({ address, error }, 'Failed to fetch DexScreener Price');
+        logger.error({ address, error }, 'Failed to fetch GeckoTerminal Price');
         return 0;
     }
 };
@@ -53,19 +58,20 @@ export const getPaymentAmount = async (amountRYF: string, currency: string) => {
     const paymentToken = getTokenByCurrency(currency);
     const isVNDC = currency.toUpperCase() === 'VNDC';
 
-    logger.info(`[Oracle API] Calculating: ${amountRYF} RYF -> ${currency}`);
+    logger.info(`[Oracle Gecko] Calculating: ${amountRYF} RYF -> ${currency}`);
+
     try {
-        const ryfPriceUsd = await getPriceUsdFromDexScreener(RYF.mainnet.address);
+        const ryfPriceUsd = await getPriceUsdFromGecko(RYF.mainnet.address);
         
         if (ryfPriceUsd === 0) {
-            throw new Error('Unable to fetch RYF price from DexScreener.');
+            throw new Error('Unable to fetch RYF price from GeckoTerminal.');
         }
 
-        let rateToPaymentToken = 1;
+        let rateToPaymentToken = 1; // Mặc định USDT = 1 USD
         if (isVNDC) {
-            const vndcPriceUsd = await getPriceUsdFromDexScreener(VNDC.mainnet.address);
+            const vndcPriceUsd = await getPriceUsdFromGecko(VNDC.mainnet.address);
             if (vndcPriceUsd === 0) {
-                logger.warn('API VNDC failed, using fallback rate 27,000');
+                logger.warn('API VNDC failed, using fallback rate');
                 rateToPaymentToken = FALLBACK_VNDC_USD_RATE; 
             } else {
                 rateToPaymentToken = 1 / vndcPriceUsd;
@@ -80,7 +86,7 @@ export const getPaymentAmount = async (amountRYF: string, currency: string) => {
         const formattedTotal = totalPay.toFixed(displayDecimals);
         const rawAmountIn = parseUnits(totalPay.toFixed(paymentToken.decimals), paymentToken.decimals);
 
-        logger.info(`   > Price Ref: 1 RYF = $${ryfPriceUsd} ${isVNDC ? `= ${(1 / ryfPriceUsd * rateToPaymentToken).toFixed(2)} VNDC` : ''}`);
+        logger.info(`   > Price Ref: 1 RYF = $${ryfPriceUsd}`);
         logger.info(`   > Final Bill: ${amountRYF} RYF = ${formattedTotal} ${currency}`);
 
         return {

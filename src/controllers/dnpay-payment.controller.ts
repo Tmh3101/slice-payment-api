@@ -15,7 +15,8 @@ const getPaymentIntentById = async (c: Context) => {
 const confirmDNPAYPayment = async (c: Context) => {
     const paymentId = c.req.param('id');
     const payload = await c.req.json();
-    const confirmationResponse = await dnpayPaymentService.confirmDNPAYPayment(paymentId, payload);
+    const user = c.get('user');
+    const confirmationResponse = await dnpayPaymentService.confirmDNPAYPayment(paymentId, payload, user);
     return successResponse({
         c,
         message: 'DNPAY payment confirmed successfully',

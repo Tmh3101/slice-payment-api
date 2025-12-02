@@ -17,7 +17,15 @@ export const authMiddleware = createMiddleware<{ Variables: AppVariables }>(
 
         try {
             const payload = await verifyToken(token);
-            c.set('user', payload as unknown as AppVariables['user']);
+            const user = {
+                email: payload.sub,
+                scopes: payload.scopes,
+                jti: payload.jti,
+                nonce: payload.nonce,
+                iat: payload.iat,
+                exp: payload.exp,
+            }
+            c.set('user', user as AppVariables['user']);
             await next();
         } catch (err) {
             throw new UnauthorizedException('Invalid or expired token');

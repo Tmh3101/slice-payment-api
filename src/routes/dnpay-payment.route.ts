@@ -2,8 +2,9 @@ import { Hono } from "hono";
 import { dnpayPaymentController } from "@/controllers/dnpay-payment.controller";
 import { validate } from '@/utils/request-validator';
 import { confirmDNPAYPaymentSchema } from "@/schema/dnpay-payment.schema";
+import { AppVariables } from "@/types";
 
-const dnpayPaymentRoute = new Hono();
+const dnpayPaymentRoute = new Hono<{ Variables: AppVariables['user']}>();
 
 dnpayPaymentRoute.get(
     "/:id",

@@ -7,6 +7,7 @@ import { dnpayService } from "@/core/dnpay/dnpay.service";
 import { logger } from "@/utils/logger";
 import { PaymentData } from "@/types";
 import { DNPAY_PAYMENT_STATUS } from "@/common/constants/dnpay-payment-status";
+import { AppVariables } from "@/types";
 
 const getPaymentIntentById = async (paymentId: string) => {
     try {
@@ -32,8 +33,6 @@ const createPayment = async (paymentData: PaymentData) => {
                 orderId: paymentData.orderId,
             }
         });
-
-        logger.info({ detail: paymentIntent.clientSecret }, 'Client Secret:');
 
         const newPayment = {
             id: paymentIntent.id,
@@ -61,7 +60,7 @@ const createPayment = async (paymentData: PaymentData) => {
     }
 };
 
-const confirmDNPAYPayment = async (paymentId: string, payload: any) => {
+const confirmDNPAYPayment = async (paymentId: string, payload: any, user: AppVariables['user']) => {
     try {
         const payment = await db.select()
             .from(paymentSchema)
@@ -71,6 +70,24 @@ const confirmDNPAYPayment = async (paymentId: string, payload: any) => {
 
         if (!payment) {
             throw new AppError(404, `Payment with ID ${paymentId} not found`);
+        }
+
+        const order = await db.select()
+            .from(orderSchema)
+            .where(eq(orderSchema.id, payment.orderId))
+            .limit(1)
+            .then(res => res[0]);
+
+        if (!order) {
+            throw new AppError(404, `Order with ID ${payment.orderId} not found`);
+        }
+
+        if (order.email !== user.email) {
+            throw new AppError(403, `You do not have permission to confirm this payment`);
+        }
+
+        if (payment.status === DNPAY_PAYMENT_STATUS.CANCELED) {
+            throw new AppError(400, `Payment with ID ${paymentId} has been canceled`);
         }
 
         if (payment.status === DNPAY_PAYMENT_STATUS.SUCCEEDED) {

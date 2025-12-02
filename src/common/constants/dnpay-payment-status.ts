@@ -4,5 +4,5 @@ export const DNPAY_PAYMENT_STATUS = {
     PROCESSING: 'processing',
     SUCCEEDED: 'succeeded',
     FAILED: 'failed',
-    CANCELLED: 'cancelled'
+    CANCELED: 'canceled'
 };
