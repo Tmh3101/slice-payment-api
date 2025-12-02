@@ -33,7 +33,7 @@ const createPayment = async (paymentData: PaymentData) => {
             }
         });
 
-        logger.info({ detail: paymentIntent }, 'DNPAY Payment Intent Created:');
+        logger.info({ detail: paymentIntent.clientSecret }, 'Client Secret:');
 
         const newPayment = {
             id: paymentIntent.id,
@@ -42,15 +42,16 @@ const createPayment = async (paymentData: PaymentData) => {
             currency: paymentData.currency,
             amount: paymentData.amount.toString(),
             status: paymentIntent.status,
-            clientSecret: paymentIntent.clientSecret,
             createdAt: new Date(paymentIntent.createdAt),
-            expiresAt: new Date(
-                new Date(paymentIntent.createdAt).getTime() + 60 * 60 * 1000
-            ), // assuming 1 hour expiry , TODO: get from paymentIntent if available
+            expiresAt: new Date(paymentIntent.expiresAt),
         };
 
-        await db.insert(paymentSchema).values(newPayment);  
-        return newPayment;
+        logger.info({ detail: newPayment }, 'DNPAY Payment Intent Created:');
+ 
+        return {
+            clientSecret: paymentIntent.clientSecret,
+            payment: newPayment
+        };
     } catch (error) {
         if (error instanceof DNPAYException) {
             throw error;
@@ -72,15 +73,16 @@ const confirmDNPAYPayment = async (paymentId: string, payload: any) => {
             throw new AppError(404, `Payment with ID ${paymentId} not found`);
         }
 
+        if (payment.status === DNPAY_PAYMENT_STATUS.SUCCEEDED) {
+            throw new AppError(400, `Payment with ID ${paymentId} has already been confirmed`);
+        }
+
         const confirmationResponse = await dnpayService.confirmDNPAYPayment({
             paymentId: payment.id,
             clientSecret: payload.clientSecret
         });
 
-        logger.info({ detail: confirmationResponse }, 'DNPAY Payment Confirmed:');
-
         if (confirmationResponse.status === DNPAY_PAYMENT_STATUS.SUCCEEDED) {
-            logger.info({ detail: { status: confirmationResponse.status } }, `Payment ${paymentId} confirmed successfully.`);
             await db.update(paymentSchema)
                 .set({ status: confirmationResponse.status })
                 .where(eq(paymentSchema.id, paymentId));
@@ -88,15 +90,14 @@ const confirmDNPAYPayment = async (paymentId: string, payload: any) => {
             await db.update(orderSchema)
                 .set({ status: OrderStatus.COMPLETED })
                 .where(eq(orderSchema.id, payment.orderId));
+                
+            logger.info({ detail: { status: confirmationResponse.status } }, `Payment ${paymentId} confirmed successfully.`);
         }
 
         return confirmationResponse;
     } catch (error) {
-        if (error instanceof DNPAYException) {
-            throw error;
-        }
         logger.error({ detail: error }, 'Confirm Payment Error:');
-        throw new AppError(500, `Failed to confirm payment: ${(error as Error).message}`);
+        throw error;
     }
 };
 

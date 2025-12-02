@@ -2,7 +2,11 @@ import { httpClient } from "@/lib/http-client";
 import { envConfig } from "@/config/env";
 import { logger } from "@/utils/logger";
 import { generateHmacSignature } from "@/utils/signature-generator";
-import { DNPAYException } from "@/exceptions/dnpay.exception";
+import {
+    DNPAYException,
+    AppSessionExpiredException,
+    InsufficientBalanceException
+} from "@/exceptions/dnpay.exception";
 import {
     DNPAYPaymentCreationRequest,
     DNPAYPaymentCreationResponse,
@@ -19,8 +23,7 @@ const getPaymentIntentById = async (paymentId: string): Promise<DNPAYPaymentResp
             );
         return response;
     } catch (error: any) {
-        logger.error({ detail: error }, 'DNPAY Get Payment Intent Error:');
-        throw new DNPAYException(error.message);
+        throw error;
     }
 };
 
@@ -36,8 +39,7 @@ const createDNPAYPaymentIntent =async (
             );
         return response;
     } catch (error: any) {
-        logger.error({ detail: error }, 'DNPAY Payment Intent Creation Error:');
-        throw new DNPAYException(error.message);
+        throw error;
     }
 };
 
@@ -54,8 +56,7 @@ const confirmDNPAYPayment = async (
             );
         return response;
     } catch (error: any) {
-        logger.error({ detail: error }, 'DNPAY Payment Confirmation Error:');
-        throw new DNPAYException(error.message);
+        throw error;
     }
 };
 
@@ -88,8 +89,6 @@ const makeDNPAYPaymentRequest = async <T>(
             'Idempotency-Key': nonce,
         };
 
-        logger.info({ detail: { endpoint, method, body, headers } }, 'DNPAY Payment Request:');
-
         const response = await httpClient<T>(`${envConfig.DNPAY_API_URL}${endpoint}`, {
             method,
             headers,
@@ -97,9 +96,16 @@ const makeDNPAYPaymentRequest = async <T>(
         });
 
         return response;
-    } catch (error) {
-        logger.error({ detail: error }, 'DNPAY Payment Request Error:');
-        throw error;
+    } catch (error: any) {
+        if (error.message && error.message.includes('App session has expired')) { 
+            throw new AppSessionExpiredException();
+        }
+
+        if (error.message && error.message.includes('Insufficient balance')) {
+            throw new InsufficientBalanceException();
+        }
+
+        throw new DNPAYException(`DNPAY Payment Request Failed: ${(error as Error).message}`);
     }
 }
 

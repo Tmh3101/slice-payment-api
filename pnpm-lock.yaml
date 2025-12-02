@@ -23,6 +23,9 @@ importers:
       hono:
         specifier: ^4.10.7
         version: 4.10.7
+      jose:
+        specifier: ^6.1.2
+        version: 6.1.2
       nanoid:
         specifier: ^5.1.6
         version: 5.1.6
@@ -585,6 +588,9 @@ packages:
     peerDependencies:
       ws: '*'
 
+  jose@6.1.2:
+    resolution: {integrity: sha512-MpcPtHLE5EmztuFIqB0vzHAWJPpmN1E6L4oo+kze56LIs3MyXIj9ZHMDxqOvkP38gBR7K1v3jqd4WU2+nrfONQ==}
+
   joycon@3.1.1:
     resolution: {integrity: sha512-34wB/Y7MW7bzjKRjUKTa46I2Z7eV62Rkhva+KkopW7Qvv/OSWBqvkSY7vusOPrNuZcUG3tApvdVgNB8POj3SPw==}
     engines: {node: '>=10'}
@@ -1033,6 +1039,8 @@ snapshots:
   isows@1.0.7(ws@8.18.3):
     dependencies:
       ws: 8.18.3
+
+  jose@6.1.2: {}
 
   joycon@3.1.1: {}
 

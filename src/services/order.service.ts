@@ -1,5 +1,5 @@
 import { db } from "@/db";
-import { orderSchema } from "@/db/schema";
+import { orderSchema, paymentSchema } from "@/db/schema";
 import { generateOrderId } from "@/utils/order-id-generator";
 import { dnpayPaymentService } from "./dnpay-payment.service";
 import { DNPAYException } from "@/exceptions/dnpay.exception";
@@ -8,8 +8,9 @@ import { logger } from "@/utils/logger";
 import { OrderData, OrderCreationResponse } from "@/types";
 import { getPaymentAmount } from '@/utils/price-oracle';
 import { RYF_TOKEN } from "@/common/constants/bsc-token";
+import { AppVariables } from "@/types";
 
-const createOrder = async (orderData: OrderData): Promise<OrderCreationResponse> => {
+const createOrder = async (orderData: OrderData, user: AppVariables['user']): Promise<OrderCreationResponse> => {
     try {
         const orderId = generateOrderId();
 
@@ -30,10 +31,8 @@ const createOrder = async (orderData: OrderData): Promise<OrderCreationResponse>
         );
         
         logger.info(`Calculated payment amount: ${paymentAmount} ${orderData.currency} for order ID: ${orderId}`);
-
-        await db.insert(orderSchema).values(newOrder);
         
-        const newPayment = await dnpayPaymentService.createPayment({
+        const { clientSecret, payment: newPayment } = await dnpayPaymentService.createPayment({
             orderId: orderId,
             appSessionId: orderData.appSessionId,
             currency: orderData.currency,
@@ -46,12 +45,17 @@ const createOrder = async (orderData: OrderData): Promise<OrderCreationResponse>
             }
         });
 
+        await db.insert(orderSchema).values(newOrder);
+        await db.insert(paymentSchema).values(newPayment); 
+
         return {
             order: newOrder,
-            payment: newPayment
+            payment: {
+                clientSecret,
+                ...newPayment
+            }
         };
     } catch (error) {
-        logger.error({ detail: error }, 'Create Order Error:');
         if (error instanceof DNPAYException) {
             throw error;
         }

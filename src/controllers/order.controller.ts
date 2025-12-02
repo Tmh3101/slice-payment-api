@@ -4,7 +4,8 @@ import { createdResponse } from "@/utils/response";
 
 const createOrder = async (c: Context) => {
     const orderData = await c.req.json();
-    const newOrder = await orderService.createOrder(orderData);
+    const user = c.get('user');
+    const newOrder = await orderService.createOrder(orderData, user);
     return createdResponse({
         c,
         message: 'Order created successfully',

@@ -1,0 +1,1 @@
+ALTER TABLE "payment_dev"."payment" DROP COLUMN "client_secret";
