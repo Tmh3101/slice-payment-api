@@ -36,7 +36,6 @@ export const paymentSchema = paymentDB.table("payment", {
   currency: varchar("currency", { length: 10 }).notNull(), // VNDC or USDT
   amount: numeric("amount", { precision: 78, scale: 0 }).notNull(), // Amount to pay in smallest unit of the currency
   status: text("status").notNull(),
-  clientSecret: text("client_secret").notNull(),
   expiresAt: timestamp("expires_at").notNull(),
 
   transactionHash: varchar("transaction_hash", { length: 66 }),

@@ -4,18 +4,32 @@ import { logger } from "@/utils/logger";
 import { generateHmacSignature } from "@/utils/signature-generator";
 import { DNPAYException } from "@/exceptions/dnpay.exception";
 import {
-    DNPAYPaymentIntentRequest,
-    DNPAYPaymentIntentResponse,
+    DNPAYPaymentCreationRequest,
+    DNPAYPaymentCreationResponse,
     DNPAYPaymentConfirmationRequest,
-    DNPAYPaymentConfirmationResponse
+    DNPAYPaymentResponse
 } from "@/types";
 
-const createDNPAYPaymentIntent =async (
-    payload: DNPAYPaymentIntentRequest
-): Promise<DNPAYPaymentIntentResponse> => {
+const getPaymentIntentById = async (paymentId: string): Promise<DNPAYPaymentResponse> => {
     try {
         const response =
-            await makeDNPAYPaymentRequest<DNPAYPaymentIntentResponse>(
+            await makeDNPAYPaymentRequest<DNPAYPaymentResponse>(
+                `/v1/payment_intents/${paymentId}`,
+                'GET'
+            );
+        return response;
+    } catch (error: any) {
+        logger.error({ detail: error }, 'DNPAY Get Payment Intent Error:');
+        throw new DNPAYException(error.message);
+    }
+};
+
+const createDNPAYPaymentIntent =async (
+    payload: DNPAYPaymentCreationRequest,
+): Promise<DNPAYPaymentCreationResponse> => {
+    try {
+        const response =
+            await makeDNPAYPaymentRequest<DNPAYPaymentCreationResponse>(
                 '/v1/payment_intents',
                 'POST',
                 payload
@@ -27,14 +41,13 @@ const createDNPAYPaymentIntent =async (
     }
 };
 
-const confirmDNPAYPayment = async ({
-    paymentId,
-    clientSecret
-}: DNPAYPaymentConfirmationRequest
-): Promise<DNPAYPaymentConfirmationResponse> => {
+const confirmDNPAYPayment = async (
+    payload: DNPAYPaymentConfirmationRequest
+): Promise<DNPAYPaymentResponse> => {
     try {
+        const { paymentId, clientSecret } = payload;
         const response =
-            await makeDNPAYPaymentRequest<DNPAYPaymentConfirmationResponse>(
+            await makeDNPAYPaymentRequest<DNPAYPaymentResponse>(
                 `/v1/payment_intents/${paymentId}/confirm`,
                 'POST',
                 { clientSecret }
@@ -58,7 +71,7 @@ const makeDNPAYPaymentRequest = async <T>(
             );
         }
 
-        const timestamp = Date.now().toString();
+        const timestamp = Math.floor(Date.now() / 1000).toString();
         const nonce = crypto.randomUUID();
         const signature = generateHmacSignature({
             body,
@@ -75,7 +88,7 @@ const makeDNPAYPaymentRequest = async <T>(
             'Idempotency-Key': nonce,
         };
 
-        logger.info({ endpoint, method, body, headers }, 'DNPAY Payment Request:');
+        logger.info({ detail: { endpoint, method, body, headers } }, 'DNPAY Payment Request:');
 
         const response = await httpClient<T>(`${envConfig.DNPAY_API_URL}${endpoint}`, {
             method,
@@ -91,6 +104,7 @@ const makeDNPAYPaymentRequest = async <T>(
 }
 
 export const dnpayService = {
+    getPaymentIntentById,
     createDNPAYPaymentIntent,
     confirmDNPAYPayment
 };

@@ -13,7 +13,7 @@ export type PaymentData = {
     metadata: PaymentMetadata;
 }
 
-export type DNPAYPaymentIntentRequest = {
+export type DNPAYPaymentCreationRequest = {
     amount: number;
     currency: string;
     appSessionId: string;
@@ -25,7 +25,7 @@ export type DNPAYPaymentConfirmationRequest = {
     clientSecret: string;
 }
 
-export type DNPAYPaymentConfirmationResponse = {
+export type DNPAYPaymentResponse = {
     id: string;
     amount: number;
     currency: string;
@@ -36,6 +36,6 @@ export type DNPAYPaymentConfirmationResponse = {
     expiresAt: string;
 }
 
-export type DNPAYPaymentIntentResponse = {
+export type DNPAYPaymentCreationResponse = {
     appSessionId: string;
-} & DNPAYPaymentConfirmationResponse;
+} & DNPAYPaymentResponse;
