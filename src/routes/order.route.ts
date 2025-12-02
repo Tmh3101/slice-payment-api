@@ -5,8 +5,6 @@ import { orderSchema } from "@/schema/order.schema";
 
 const orderRouter = new Hono();
 
-orderRouter.get("/", (c) => c.text("Order API is working"));
-
 orderRouter.post(
     "/",
     validate('json', orderSchema),

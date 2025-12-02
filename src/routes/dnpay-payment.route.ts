@@ -5,8 +5,6 @@ import { confirmDNPAYPaymentSchema } from "@/schema/dnpay-payment.schema";
 
 const dnpayPaymentRoute = new Hono();
 
-dnpayPaymentRoute.get("/", (c) => c.text("Order API is working"));
-
 dnpayPaymentRoute.get(
     "/:id",
     dnpayPaymentController.getPaymentIntentById
