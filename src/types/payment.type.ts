@@ -20,14 +20,22 @@ export type DNPAYPaymentIntentRequest = {
     metadata: PaymentMetadata;
 }
 
-export type DNPAYPaymentIntentResponse = {
+export type DNPAYPaymentConfirmationRequest = {
+    paymentId: string;
+    clientSecret: string;
+}
+
+export type DNPAYPaymentConfirmationResponse = {
     id: string;
     amount: number;
+    currency: string;
     status: string;
     clientSecret: string;
-    appSessionId: string;
-    currency: string;
     metadata: PaymentMetadata;
     createdAt: string;
     expiresAt: string;
 }
+
+export type DNPAYPaymentIntentResponse = {
+    appSessionId: string;
+} & DNPAYPaymentConfirmationResponse;

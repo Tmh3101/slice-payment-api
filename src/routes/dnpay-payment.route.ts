@@ -8,9 +8,9 @@ const dnpayPaymentRoute = new Hono();
 dnpayPaymentRoute.get("/", (c) => c.text("Order API is working"));
 
 dnpayPaymentRoute.post(
-    "/webhook",
+    "/:id/confirm",
     // validate('json', orderSchema),
-    dnpayPaymentController.handleDNPAYPaymentWebhook
+    dnpayPaymentController.confirmDNPAYPayment
 );
 
 export default dnpayPaymentRoute;

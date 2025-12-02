@@ -32,7 +32,7 @@ const createPayment = async (paymentData: PaymentData) => {
             expiresAt: new Date(paymentIntent.expiresAt),
         };
 
-        await db.insert(paymentSchema).values(newPayment);
+        await db.insert(paymentSchema).values(newPayment);  
         return newPayment;
     } catch (error) {
         logger.error({ detail: error }, 'Create Payment Error:');
@@ -43,12 +43,11 @@ const createPayment = async (paymentData: PaymentData) => {
     }
 };
 
-const handleDNPAYPaymentWebhook = async (payload: any) => {
-    logger.info({ detail: payload }, 'DNPAY Webhook Received:');
-    // TODO: Implement webhook handling logic
+const confirmDNPAYPayment = async (paymentId: string) => {
+    // TODO: Implement payment confirmation logic
 };
 
 export const dnpayPaymentService = {
     createPayment,
-    handleDNPAYPaymentWebhook,
+    confirmDNPAYPayment
 };
