@@ -15,6 +15,7 @@ export enum PaymentProvider {
 export const orderSchema = paymentDB.table("order", {
   id: varchar("id", { length: 15 }).primaryKey(),
   email: varchar("email", { length: 255 }).notNull(),
+  userWalletAddress: varchar("user_wallet_address", { length: 42 }).notNull(), // User's wallet address
 
   tokenAddress: varchar("token_address", { length: 42 }).notNull(), // RYF Address
   amount: numeric("amount", { precision: 78, scale: 0 }).notNull(), // Amount of RYF in smallest unit
@@ -36,19 +37,16 @@ export const paymentSchema = paymentDB.table("payment", {
   currency: varchar("currency", { length: 10 }).notNull(), // VNDC or USDT
   amount: numeric("amount", { precision: 78, scale: 0 }).notNull(), // Amount to pay in smallest unit of the currency
   status: text("status").notNull(),
-  expiresAt: timestamp("expires_at").notNull(),
-
-  transactionHash: varchar("transaction_hash", { length: 66 }),
 
   orderId: varchar("order_id", { length: 15 })
     .notNull()
     .references(() => orderSchema.id, { onDelete: 'cascade' }),
 
+  expiresAt: timestamp("expires_at").notNull(),
   createdAt: timestamp("created_at").notNull(),
 }, (table) => {
   return {
     orderIdx: index("payment_order_idx").on(table.orderId),
-    txHashIdx: index("payment_tx_hash_idx").on(table.transactionHash),
   };
 })
 

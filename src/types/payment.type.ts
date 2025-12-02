@@ -1,6 +1,7 @@
 export type PaymentMetadata = {
     orderId: string;
     email: string;
+    walletAddress: string;
     tokenAddress: string;
     amount: string;
 }

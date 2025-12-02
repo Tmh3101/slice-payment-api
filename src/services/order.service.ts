@@ -20,7 +20,8 @@ const createOrder = async (orderData: OrderData, user: AppVariables['user']): Pr
 
         const newOrder = {
             id: orderId,
-            email: orderData.email,
+            email: user.email,
+            userWalletAddress: orderData.walletAddress,
             tokenAddress: orderData.tokenAddress,
             amount: orderData.amount.toString(),
         };
@@ -39,7 +40,8 @@ const createOrder = async (orderData: OrderData, user: AppVariables['user']): Pr
             amount: Number(paymentAmount),
             metadata: {
                 orderId: orderId,
-                email: orderData.email,
+                email: user.email,
+                walletAddress: orderData.walletAddress,
                 tokenAddress: orderData.tokenAddress,
                 amount: orderData.amount.toString(),
             }

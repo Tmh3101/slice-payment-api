@@ -1,5 +1,6 @@
 export type OrderData = {
     email: string;
+    walletAddress: string;
     tokenAddress: string;
     amount: number;
     currency: string;
