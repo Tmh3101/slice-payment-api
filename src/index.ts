@@ -6,6 +6,7 @@ import { logger as honoLogger } from 'hono/logger'
 import { prettyJSON } from 'hono/pretty-json'
 import { logger } from '@/utils/logger'
 import { globalErrorHandler, notFoundHandler } from './middlewares/error-handler';
+import { handle } from 'hono/vercel';
 import orderRouter from '@/routes/order.route'
 import dnpayPaymentRoute from '@/routes/dnpay-payment.route'
 
@@ -27,3 +28,5 @@ const port = Number(process.env.PORT ?? 3000);
 serve({ fetch: app.fetch, port }, (info) => {
   logger.info(`Server running on http://localhost:${info.port}`)
 })
+
+export default handle(app);
