@@ -1,10 +1,14 @@
 import { defineConfig } from 'tsup'
 
 export default defineConfig({
-    entry: ['src/index.ts'],
+    entry: ['src/index.ts', 'api/index.ts'],
     format: ['esm'],
     target: 'node18',
     clean: true,
-    minify: true,
+    minify: false,
     sourcemap: true,
+    bundle: true,
+    external: [
+        'pino-pretty',
+    ],
 })
