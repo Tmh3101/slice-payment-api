@@ -1,5 +1,5 @@
 import { uuid, text, varchar, numeric, timestamp, index, primaryKey } from "drizzle-orm/pg-core";
-import { paymentDB } from "./utils"
+import { paymentDB } from "./utils.js"
 
 export enum OrderStatus {
   PENDING = "PENDING",

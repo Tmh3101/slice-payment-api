@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { orderSchema, paymentSchema, OrderStatus } from "@/db/schema";
 import { generateOrderId } from "@/utils/order-id-generator";
-import { dnpayPaymentService } from "./dnpay-payment.service";
+import { dnpayPaymentService } from "./dnpay-payment.service.js";
 import { DNPAYException } from "@/exceptions/dnpay.exception";
 import { AppError } from "@/utils/app.error";
 import { logger } from "@/utils/logger";

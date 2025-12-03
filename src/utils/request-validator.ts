@@ -1,5 +1,5 @@
 import { zValidator } from '@hono/zod-validator';
-import { errorResponse } from './response';
+import { errorResponse } from './response.js';
 import { ErrorCodes } from '@/common/constants/error-code';
 
 export const validate = (target: 'json' | 'query' | 'param', schema: any) => {

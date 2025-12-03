@@ -1,7 +1,7 @@
 import { Context } from 'hono';
 import { HTTPException } from 'hono/http-exception';
 import { ZodError } from 'zod';
-import { errorResponse } from '../utils/response';
+import { errorResponse } from '../utils/response.js';
 import { AppError } from '@/utils/app.error';
 import { ErrorCodes } from '@/common/constants/error-code';
 import { logger } from '@/utils/logger';
