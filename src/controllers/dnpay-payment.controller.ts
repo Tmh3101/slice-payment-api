@@ -4,11 +4,11 @@ import { successResponse } from "@/utils/response";
 
 const getPaymentIntentById = async (c: Context) => {
     const paymentId = c.req.param('id');
-    const paymentIntent = await dnpayPaymentService.getPaymentIntentById(paymentId);
+    const result = await dnpayPaymentService.getPaymentIntentById(paymentId);
     return successResponse({
         c,
         message: 'DNPAY payment intent retrieved successfully',
-        data: paymentIntent
+        data: result
     });
 };
 
@@ -16,11 +16,11 @@ const confirmDNPAYPayment = async (c: Context) => {
     const paymentId = c.req.param('id');
     const payload = await c.req.json();
     const user = c.get('user');
-    const confirmationResponse = await dnpayPaymentService.confirmDNPAYPayment(paymentId, payload, user);
+    const result = await dnpayPaymentService.confirmDNPAYPayment(paymentId, payload, user);
     return successResponse({
         c,
         message: 'DNPAY payment confirmed successfully',
-        data: confirmationResponse
+        data: result
     });
 }
 

@@ -15,4 +15,9 @@ orderRouter.post(
     orderController.createOrder
 );
 
+orderRouter.patch(
+    "/:orderId/cancel",
+    orderController.cancelOrder
+);
+
 export default orderRouter;
