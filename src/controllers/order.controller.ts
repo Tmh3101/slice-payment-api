@@ -1,6 +1,6 @@
 import type { Context } from "hono";
 import { orderService } from "@/services/order.service";
-import { createdResponse } from "@/utils/response";
+import { createdResponse, successResponse } from "@/utils/response";
 
 const createOrder = async (c: Context) => {
     const orderData = await c.req.json();
@@ -17,7 +17,7 @@ const cancelOrder = async (c: Context) => {
     const orderId = c.req.param('orderId');
     const user = c.get('user');
     const result = await orderService.cancelOrder(orderId, user);
-    return createdResponse({
+    return successResponse({
         c,
         message: 'Order cancelled successfully',
         data: result
