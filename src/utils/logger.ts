@@ -1,17 +1,20 @@
 import pino from 'pino'
 
-const isDev = process.env.NODE_ENV !== 'production'
+const isProduction = process.env.NODE_ENV === 'production' || process.env.VERCEL === '1'
+const isDev = !isProduction
 
 export const logger = pino({
-  level: process.env.LOG_LEVEL || 'debug',
-  transport: isDev
+  level: process.env.LOG_LEVEL || (isProduction ? 'info' : 'debug'),
+  ...(isDev
     ? {
-        target: 'pino-pretty',
-        options: {
-          colorize: true,
-          translateTime: 'HH:MM:ss',
-          ignore: 'pid,hostname',
+        transport: {
+          target: 'pino-pretty',
+          options: {
+            colorize: true,
+            translateTime: 'HH:MM:ss',
+            ignore: 'pid,hostname',
+          },
         },
       }
-    : undefined,
+    : {}),
 })
