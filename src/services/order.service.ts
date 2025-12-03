@@ -55,14 +55,25 @@ const createOrder = async (
             }
         });
 
-        await db.insert(orderSchema).values(newOrder);
-        await db.insert(paymentSchema).values(newPayment); 
+        const insertedOrder = await db.insert(orderSchema)
+            .values(newOrder)
+            .returning()
+            .then(res => res[0]);
+
+        const insertedPayment = await db.insert(paymentSchema)
+            .values(newPayment)
+            .returning()
+            .then(res => res[0]);
+
+        if (!insertedOrder || !insertedPayment) {
+            throw new AppError(500, 'Failed to create order or payment record in the database');
+        }
 
         return {
-            order: newOrder,
+            order: insertedOrder,
             payment: {
                 clientSecret,
-                ...newPayment
+                ...insertedPayment
             }
         };
     } catch (error) {
