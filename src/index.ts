@@ -1,32 +1,11 @@
 import 'dotenv/config'
 import { serve } from '@hono/node-server'
-import { Hono } from 'hono'
-import { cors } from 'hono/cors'
-import { logger as honoLogger } from 'hono/logger'
-import { prettyJSON } from 'hono/pretty-json'
-import { logger } from '@/utils/logger'
-import { globalErrorHandler, notFoundHandler } from './middlewares/error-handler';
-import { handle } from 'hono/vercel';
-import orderRouter from '@/routes/order.route'
-import dnpayPaymentRoute from '@/routes/dnpay-payment.route'
+import { logger } from '@/utils/logger.js'
+import { createApp } from '@/app.js'
 
-const app = new Hono()
+const app = createApp()
 
-app.use(cors())
-app.use(honoLogger())
-app.use(prettyJSON())
-
-app.get('/', (c) => c.text('Hello Slice Payment API!'))
-
-app.route('/api/orders', orderRouter)
-app.route('/api/dnpay-payment', dnpayPaymentRoute)
-
-app.notFound(notFoundHandler);
-app.onError(globalErrorHandler);
-
-const port = Number(process.env.PORT ?? 3000);
+const port = Number(process.env.PORT ?? 3000)
 serve({ fetch: app.fetch, port }, (info) => {
   logger.info(`Server running on http://localhost:${info.port}`)
 })
-
-export default handle(app);
