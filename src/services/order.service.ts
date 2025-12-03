@@ -106,7 +106,9 @@ const cancelOrder = async (orderId: string, user: AppVariables['user']) => {
 
         const updatedOrder = await db.update(orderSchema)
             .set({ status: OrderStatus.CANCELLED })
-            .where(eq(orderSchema.id, orderId));
+            .where(eq(orderSchema.id, orderId))
+            .returning()
+            .then(res => res[0]);
 
         return updatedOrder;
     } catch (error) {
