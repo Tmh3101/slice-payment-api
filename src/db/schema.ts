@@ -18,7 +18,7 @@ export const orderSchema = paymentDB.table("order", {
   userWalletAddress: varchar("user_wallet_address", { length: 42 }).notNull(), // User's wallet address
 
   tokenAddress: varchar("token_address", { length: 42 }).notNull(), // RYF Address
-  amount: numeric("amount", { precision: 78, scale: 0 }).notNull(), // Amount of RYF in smallest unit
+  amount: numeric("amount", { precision: 78, scale: 18 }).notNull(), // Amount of RYF in smallest unit
   status: text("status").notNull().default(OrderStatus.PENDING),
 
   createdAt: timestamp("created_at").defaultNow(),
