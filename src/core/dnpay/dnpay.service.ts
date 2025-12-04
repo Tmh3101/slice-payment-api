@@ -95,8 +95,6 @@ const makeDNPAYPaymentRequest = async <T>(
             body: body ? JSON.stringify(body) : undefined,
         });
 
-        logger.info({ detail: response }, 'DNPAY Payment Response:');
-
         return response;
     } catch (error: any) {
         if (error.message && error.message.includes('App session has expired')) { 
@@ -107,6 +105,7 @@ const makeDNPAYPaymentRequest = async <T>(
             throw new InsufficientBalanceException();
         }
 
+        logger.error({ detail: error }, 'DNPAY Payment Request Error:');
         throw new DNPAYException(`DNPAY Payment Request Failed: ${(error as Error).message}`);
     }
 }

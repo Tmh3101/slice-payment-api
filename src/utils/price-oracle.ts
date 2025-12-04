@@ -85,6 +85,7 @@ export const getPaymentAmount = async (amountRYF: string, currency: string) => {
         const displayDecimals = isVNDC ? 0 : 6;
         const formattedTotal = totalPay.toFixed(displayDecimals);
         const rawAmountIn = parseUnits(totalPay.toFixed(paymentToken.decimals), paymentToken.decimals);
+        const roundedTotalAmount = Math.round(Number(formattedTotal))
 
         logger.info(`   > Price Ref: 1 RYF = $${ryfPriceUsd}`);
         logger.info(`   > Final Bill: ${amountRYF} RYF = ${formattedTotal} ${currency}`);
@@ -93,7 +94,8 @@ export const getPaymentAmount = async (amountRYF: string, currency: string) => {
             rawAmountIn: rawAmountIn,
             formattedAmountIn: formattedTotal,
             rate: finalRate,
-            currency: currency
+            currency: currency,
+            roundedTotalAmount
         };
     } catch (error: any) {
         logger.error({ detail: error.message }, 'Price Oracle Error');

@@ -32,7 +32,7 @@ const createOrder = async (
             amount: orderData.amount.toString(),
         };
 
-        const { formattedAmountIn: paymentAmount } = await getPaymentAmount(
+        const { roundedTotalAmount: paymentAmount } = await getPaymentAmount(
             orderData.amount.toString(),
             orderData.currency
         );
@@ -45,7 +45,7 @@ const createOrder = async (
             orderId: orderId,
             appSessionId: orderData.appSessionId,
             currency: orderData.currency,
-            amount: Number(paymentAmount),
+            amount: paymentAmount,
             metadata: {
                 orderId: orderId,
                 email: user.email,

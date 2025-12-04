@@ -45,8 +45,6 @@ const createPayment = async (paymentData: PaymentData) => {
             createdAt: new Date(paymentIntent.createdAt),
             expiresAt: new Date(paymentIntent.expiresAt),
         };
-
-        logger.info({ detail: newPayment }, 'DNPAY Payment Intent Created:');
  
         return {
             clientSecret: paymentIntent.clientSecret,
