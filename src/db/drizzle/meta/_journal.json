@@ -71,6 +71,13 @@
       "when": 1764829243221,
       "tag": "0009_complex_paladin",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1764860212076,
+      "tag": "0010_stormy_sharon_ventura",
+      "breakpoints": true
     }
   ]
 }

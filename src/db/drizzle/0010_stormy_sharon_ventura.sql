@@ -1,0 +1,1 @@
+ALTER TABLE "payment_dev"."payment" ALTER COLUMN "amount" SET DATA TYPE numeric(78, 6);
