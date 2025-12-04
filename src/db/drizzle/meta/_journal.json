@@ -50,6 +50,13 @@
       "when": 1764682862587,
       "tag": "0006_lonely_human_cannonball",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1764819315848,
+      "tag": "0007_wooden_scarlet_witch",
+      "breakpoints": true
     }
   ]
 }

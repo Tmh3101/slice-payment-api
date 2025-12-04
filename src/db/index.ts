@@ -10,4 +10,4 @@ export const client = postgres(
 
 export const db = drizzle(client);
 
-export * from "./utils.js";
+export * from "./utils";
