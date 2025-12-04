@@ -64,6 +64,13 @@
       "when": 1764822253774,
       "tag": "0008_petite_skrulls",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1764829243221,
+      "tag": "0009_complex_paladin",
+      "breakpoints": true
     }
   ]
 }
