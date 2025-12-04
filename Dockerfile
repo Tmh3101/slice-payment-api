@@ -15,7 +15,7 @@ RUN pnpm run build
 
 FROM node:20-bullseye-slim AS runner
 WORKDIR /app
-ENV NODE_ENV=production
+ENV NODE_ENV=development
 
 # Enable pnpm in the runner image
 RUN corepack enable \
@@ -31,4 +31,4 @@ COPY --from=builder /app/certs ./certs
 
 EXPOSE 3000
 
-CMD ["node", "dist/index.js"]
+CMD ["node", "dist/src/index.js"]

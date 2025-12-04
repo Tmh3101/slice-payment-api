@@ -49,7 +49,7 @@ docker build -t slice-payment-api:latest .
 2. **Run the container** using an env file (recommended):
 
 ```powershell
-docker run -d --name slice-payment `
+docker run -d --name slice-payment-api `
   --env-file ./.env.production `
   -p 3000:3000 `
   slice-payment-api:latest
@@ -69,7 +69,9 @@ docker run -d --name slice-payment `
 
 - The `Dockerfile` uses a multi-stage build:
   - **builder**: installs dependencies with `pnpm`, builds TypeScript into `dist` using `tsup`
-  - **runner**: installs production dependencies and runs the built `dist/index.js`
+  - **runner**: installs production dependencies and runs the built `dist/src/index.js`
+
+**Note**: The build outputs to `dist/src/index.js` for local development and `dist/api/index.js` for Vercel serverless deployment.
 
 ### Optional: Docker Compose
 
@@ -158,18 +160,19 @@ The `vercel.json` file is already configured:
 ```json
 {
   "buildCommand": "pnpm run build",
-  "devCommand": "pnpm run dev",
-  "installCommand": "pnpm install",
-  "framework": null,
-  "outputDirectory": "dist",
   "rewrites": [
     {
       "source": "/(.*)",
-      "destination": "/api"
+      "destination": "/dist/api/index.js"
     }
   ]
 }
 ```
+
+**How it works:**
+- Vercel runs `pnpm run build` which bundles everything into `dist/api/index.js` (single file ~650KB)
+- All dependencies and path aliases are resolved at build time
+- The bundled file is deployed as a serverless function
 
 ### API Routes on Vercel
 
