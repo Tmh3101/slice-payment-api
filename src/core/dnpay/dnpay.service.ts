@@ -89,11 +89,15 @@ const makeDNPAYPaymentRequest = async <T>(
             'Idempotency-Key': nonce,
         };
 
+        logger.info({ detail: { endpoint, method, body, headers } }, 'DNPAY Payment Request:');
+
         const response = await httpClient<T>(`${envConfig.DNPAY_API_URL}${endpoint}`, {
             method,
             headers,
             body: body ? JSON.stringify(body) : undefined,
         });
+
+        logger.info({ detail: response }, 'DNPAY Payment Response:');
 
         return response;
     } catch (error: any) {

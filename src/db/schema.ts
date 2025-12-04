@@ -47,7 +47,7 @@ export const paymentSchema = paymentDB.table("payment", {
 
   appSessionId: uuid("app_session_id").notNull(), // // Session ID from provider app
   currency: varchar("currency", { length: 10 }).notNull(), // VNDC or USDT
-  amount: numeric("amount", { precision: 78, scale: 18 }).notNull(), // Amount to pay in smallest unit of the currency
+  amount: numeric("amount", { precision: 78, scale: 0 }).notNull(), // Amount to pay in smallest unit of the currency
   status: text("status").notNull(),
 
   orderId: varchar("order_id", { length: 15 })
