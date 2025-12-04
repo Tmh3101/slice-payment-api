@@ -57,6 +57,13 @@
       "when": 1764819315848,
       "tag": "0007_wooden_scarlet_witch",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1764822253774,
+      "tag": "0008_petite_skrulls",
+      "breakpoints": true
     }
   ]
 }
