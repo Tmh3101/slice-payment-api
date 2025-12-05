@@ -15,7 +15,9 @@
     "dotenv": "^17.2.3",
     "drizzle-orm": "^0.44.7",
     "hono": "^4.10.7",
+    "ioredis": "^5.8.2",
     "jose": "^6.1.2",
+    "moralis": "^2.27.2",
     "nanoid": "^5.1.6",
     "pino": "^10.1.0",
     "pino-pretty": "^13.1.2",
@@ -24,6 +26,7 @@
     "zod": "^4.1.13"
   },
   "devDependencies": {
+    "@types/ioredis": "^5.0.0",
     "@types/nanoid": "^3.0.0",
     "@types/node": "^20.11.17",
     "drizzle-kit": "^0.31.7",

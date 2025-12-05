@@ -1,4 +1,5 @@
 import { erc20Abi, parseUnits, formatUnits } from 'viem';
+import { Mutex } from 'async-mutex';
 import { db } from '@/db';
 import { transferSchema } from '@/db/schema';
 import { lensPublicClient, lensWalletClient } from '@/config/clients';
@@ -9,7 +10,6 @@ import {
 import type { TokenTransferData } from '@/types/tokenTransfer.type';
 import { LENS_RYF_TOKEN } from '@/common/constants/lensChain-token';
 import { logger } from '@/utils/logger';
-import { Mutex } from 'async-mutex';
 
 const transferMutex = new Mutex();
 
@@ -29,11 +29,8 @@ const createSimulatedTransfer = async (transferData: TokenTransferData) => {
         });
 
         if (adminBalance < amountWei) {
-            throw new TreasuryBalanceInsufficientException(
-                `Treasury balance insufficient:
-                    Have ${formatUnits(adminBalance, LENS_RYF_TOKEN.decimals)} ${LENS_RYF_TOKEN.symbol},
-                    Need ${formatUnits(amountWei, LENS_RYF_TOKEN.decimals)} ${LENS_RYF_TOKEN.symbol}`
-            );
+            logger.error(`[TokenService] Treasury balance insufficient: Have ${formatUnits(adminBalance, LENS_RYF_TOKEN.decimals)} ${LENS_RYF_TOKEN.symbol}, Need ${formatUnits(amountWei, LENS_RYF_TOKEN.decimals)} ${LENS_RYF_TOKEN.symbol}`);
+            throw new TreasuryBalanceInsufficientException('Treasury balance insufficient');
         }
 
         logger.info(`[TokenService] Treasury balance sufficient: ${formatUnits(adminBalance, LENS_RYF_TOKEN.decimals)} ${LENS_RYF_TOKEN.symbol}`);

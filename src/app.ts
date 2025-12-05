@@ -3,6 +3,7 @@ import { cors } from 'hono/cors'
 import { logger as honoLogger } from 'hono/logger'
 import { prettyJSON } from 'hono/pretty-json'
 import { globalErrorHandler, notFoundHandler } from './middlewares/error-handler'
+import { initMoralis } from './lib/moralis';
 import orderRouter from './routes/order.route'
 import dnpayPaymentRoute from './routes/dnpay-payment.route'
 
@@ -20,6 +21,8 @@ export const createApp = () => {
 
   app.notFound(notFoundHandler)
   app.onError(globalErrorHandler)
+
+  initMoralis()
 
   return app
 }
