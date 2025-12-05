@@ -1,0 +1,1 @@
+ALTER TABLE "payment_dev"."order" ADD COLUMN "reason" text;

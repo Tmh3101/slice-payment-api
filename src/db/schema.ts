@@ -8,6 +8,12 @@ export enum OrderStatus {
   CANCELLED = "CANCELLED"
 }
 
+export enum OrderFailureReason {
+  USER_INSUFFICIENT_BALANCE = "USER_INSUFFICIENT_BALANCE",
+  CONFIRM_PAYMENT_FAILED = "CONFIRM_PAYMENT_FAILED",
+  TOKEN_TRANSFER_FAILED = "TOKEN_TRANSFER_FAILED",
+}
+
 export enum PaymentProvider {
   DNPAY = 'DNPAY',
 }
@@ -20,6 +26,7 @@ export const orderSchema = paymentDB.table("order", {
   tokenAddress: varchar("token_address", { length: 42 }).notNull(), // RYF Address
   amount: numeric("amount", { precision: 78, scale: 18 }).notNull(), // Amount of RYF in smallest unit
   status: text("status").notNull().default(OrderStatus.PENDING),
+  reason: text("reason"), // Reason for failure if any
 
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => new Date())

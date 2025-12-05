@@ -1,19 +1,19 @@
-import { erc20Abi, parseUnits } from 'viem';
+import { erc20Abi, parseUnits, formatUnits } from 'viem';
 import { lensPublicClient, lensWalletClient } from '@/config/clients';
 import { LENS_RYF_TOKEN } from '@/common/constants/lensChain-token';
 import {
     TreasuryBalanceInsufficientException,
-    TokenTransferFailedException
-} from '@/exceptions/treasury.exception';
+    TokenTransferException
+} from '@/exceptions/token.exception';
 import { db } from '@/db';
 import { transferSchema } from '@/db/schema';
 import type { TokenTransferData } from '@/types/tokenTransfer.type';
 import { logger } from '@/utils/logger';
 
-const transferTokenToUser = async (transferData: TokenTransferData) => {
-    const { orderId, amount, toAddress } = transferData;
+const createSimulatedTransfer = async (transferData: TokenTransferData) => {
+    const { amount, toAddress } = transferData;
     try {
-        logger.info(`[TokenService] Preparing to send ${amount} RYF to ${toAddress}...`);
+        logger.info(`[TokenService] Preparing to send ${Number(amount)} ${LENS_RYF_TOKEN.symbol} to ${toAddress}...`);
         const amountWei = parseUnits(amount, LENS_RYF_TOKEN.decimals);
 
         const adminBalance = await lensPublicClient.readContract({
@@ -27,10 +27,13 @@ const transferTokenToUser = async (transferData: TokenTransferData) => {
 
         if (adminBalance < amountWei) {
             throw new TreasuryBalanceInsufficientException(
-                `Treasury balance insufficient: Have ${adminBalance.toString()}, Need ${amountWei.toString()}`
+                `Treasury balance insufficient:
+                    Have ${formatUnits(adminBalance, LENS_RYF_TOKEN.decimals)} ${LENS_RYF_TOKEN.symbol},
+                    Need ${formatUnits(amountWei, LENS_RYF_TOKEN.decimals)} ${LENS_RYF_TOKEN.symbol}`
             );
         }
 
+        logger.info(`[TokenService] Treasury balance sufficient: ${formatUnits(adminBalance, LENS_RYF_TOKEN.decimals)} ${LENS_RYF_TOKEN.symbol}`);
         // Giúp phát hiện lỗi (hết gas, lỗi contract) trước khi gửi thật
         const { request } = await lensPublicClient.simulateContract({
             account: lensWalletClient.account,
@@ -42,6 +45,25 @@ const transferTokenToUser = async (transferData: TokenTransferData) => {
                 amountWei
             ],
         });
+        return request;
+    } catch (error: any) {
+        logger.error({ error: error.message }, '[TokenService] Simulation failed');
+        throw new TokenTransferException(
+            `Simulated transfer to ${toAddress} failed: ${error.shortMessage || error.message}`
+        );
+    }
+};
+
+const transferTokenToUser = async (transferData: TokenTransferData, request?: any) => {
+    const { orderId, amount, toAddress } = transferData;
+    try {
+        if (!request) {
+            request = await createSimulatedTransfer({
+                amount,
+                toAddress,
+                orderId
+            });
+        }
 
         // Gửi Transaction (Write Contract)
         const hash = await lensWalletClient.writeContract(request);
@@ -49,7 +71,7 @@ const transferTokenToUser = async (transferData: TokenTransferData) => {
 
         const receipt = await lensPublicClient.waitForTransactionReceipt({ hash });
         if (receipt.status !== 'success') {
-            throw new TokenTransferFailedException('Transaction Failed on Blockchain');
+            throw new TokenTransferException('Transaction Failed on Blockchain');
         }
 
         const transferData = {
@@ -65,12 +87,13 @@ const transferTokenToUser = async (transferData: TokenTransferData) => {
         return transferData;
     } catch (error: any) {
         logger.error({ error: error.message }, '[TokenService] Transfer Failed');
-        throw new TokenTransferFailedException(
+        throw new TokenTransferException(
             `Transfer to ${toAddress} failed: ${error.shortMessage || error.message}`
         );
     }
 };
 
 export const ryfTokenService = {
+    createSimulatedTransfer,
     transferTokenToUser,
 };

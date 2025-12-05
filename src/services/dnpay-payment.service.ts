@@ -1,7 +1,13 @@
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
-import { paymentSchema, orderSchema, OrderStatus } from "@/db/schema";
-import { DNPAYException } from "@/exceptions/dnpay.exception";
+import {
+    paymentSchema,
+    orderSchema,
+    OrderStatus,
+    OrderFailureReason
+} from "@/db/schema";
+import { DNPAYException, InsufficientBalanceException } from "@/exceptions/dnpay.exception";
+import { TokenTransferException } from "@/exceptions/token.exception";
 import { AppError } from "@/utils/app.error";
 import { dnpayService } from "@/core/dnpay/dnpay.service";
 import { ryfTokenService } from "@/core/token/ryf-token.service";
@@ -60,8 +66,10 @@ const createPayment = async (paymentData: PaymentData) => {
 };
 
 const confirmDNPAYPayment = async (paymentId: string, payload: any, user: AppVariables['user']) => {
+    let payment = null;
+    let order = null;
     try {
-        const payment = await db.select()
+        payment = await db.select()
             .from(paymentSchema)
             .where(eq(paymentSchema.id, paymentId))
             .limit(1)
@@ -71,7 +79,7 @@ const confirmDNPAYPayment = async (paymentId: string, payload: any, user: AppVar
             throw new AppError(404, `Payment with ID ${paymentId} not found`);
         }
 
-        const order = await db.select()
+        order = await db.select()
             .from(orderSchema)
             .where(eq(orderSchema.id, payment.orderId))
             .limit(1)
@@ -93,6 +101,12 @@ const confirmDNPAYPayment = async (paymentId: string, payload: any, user: AppVar
             throw new AppError(400, `Payment with ID ${paymentId} has already been confirmed`);
         }
 
+        const transferRequest = await ryfTokenService.createSimulatedTransfer({
+            amount: order.amount,
+            toAddress: order.userWalletAddress as `0x${string}`,
+            orderId: order.id
+        });
+
         const confirmationResponse = await dnpayService.confirmDNPAYPayment({
             paymentId: payment.id,
             clientSecret: payload.clientSecret
@@ -106,11 +120,14 @@ const confirmDNPAYPayment = async (paymentId: string, payload: any, user: AppVar
             .set({ status: confirmationResponse.status })
             .where(eq(paymentSchema.id, paymentId));
 
-        const transferData = await ryfTokenService.transferTokenToUser({
-            orderId: order.id,
-            amount: order.amount,
-            toAddress: order.userWalletAddress as `0x${string}`
-        });
+        const transferData = await ryfTokenService.transferTokenToUser(
+            {
+                orderId: order.id,
+                amount: order.amount,
+                toAddress: order.userWalletAddress as `0x${string}`
+            },
+            transferRequest
+        );
 
         await db.update(orderSchema)
             .set({ status: OrderStatus.COMPLETED })
@@ -124,6 +141,25 @@ const confirmDNPAYPayment = async (paymentId: string, payload: any, user: AppVar
         };
     } catch (error) {
         logger.error({ detail: error }, 'Confirm Payment Error:');
+        if (error instanceof DNPAYException && payment) {
+            const paymentFailedReason = error instanceof InsufficientBalanceException
+                ? OrderFailureReason.USER_INSUFFICIENT_BALANCE
+                : OrderFailureReason.CONFIRM_PAYMENT_FAILED;
+
+            await db.update(orderSchema)
+                .set({
+                    status: OrderStatus.FAILED,
+                    reason: paymentFailedReason
+                })
+                .where(eq(orderSchema.id, payment.orderId));
+        } else if (error instanceof TokenTransferException && payment) {
+            await db.update(orderSchema)
+                .set({
+                    status: OrderStatus.FAILED,
+                    reason: OrderFailureReason.TOKEN_TRANSFER_FAILED
+                })
+                .where(eq(orderSchema.id, payment.orderId));
+        }
         throw error;
     }
 };
