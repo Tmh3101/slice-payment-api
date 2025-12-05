@@ -1,5 +1,5 @@
 import { createMiddleware } from 'hono/factory';
-import { UnauthorizedException } from '@/exceptions/auth.exception';
+import { UnauthorizedException } from '@/exceptions';
 import { verifyToken } from "@/utils/verify-token";
 import { AppVariables } from '@/types';
 

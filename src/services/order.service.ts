@@ -45,7 +45,7 @@ const createOrder = async (
             orderId: orderId,
             appSessionId: orderData.appSessionId,
             currency: orderData.currency,
-            amount: Number(paymentAmount),
+            amount: paymentAmount,
             metadata: {
                 orderId: orderId,
                 email: user.email,

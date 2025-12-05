@@ -6,7 +6,7 @@ import {
     DNPAYException,
     AppSessionExpiredException,
     InsufficientBalanceException
-} from "@/exceptions/dnpay.exception";
+} from "@/exceptions";
 import {
     DNPAYPaymentCreationRequest,
     DNPAYPaymentCreationResponse,
@@ -89,11 +89,15 @@ const makeDNPAYPaymentRequest = async <T>(
             'Idempotency-Key': nonce,
         };
 
+        // logger.debug({ request: { endpoint, method, headers, body } }, `DNPAY Payment Request:`);
+
         const response = await httpClient<T>(`${envConfig.DNPAY_API_URL}${endpoint}`, {
             method,
             headers,
             body: body ? JSON.stringify(body) : undefined,
         });
+
+        // logger.debug({ response }, `DNPAY Payment Response:`);
 
         return response;
     } catch (error: any) {

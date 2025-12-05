@@ -10,13 +10,13 @@ export type PaymentData = {
     orderId: string;
     appSessionId: string;
     currency: string;
-    amount: number;
+    amount: string;
     metadata: PaymentMetadata;
 }
 
 export type DNPAYPaymentResponse = {
     id: string;
-    amount: number;
+    amount: string;
     currency: string;
     status: string;
     clientSecret: string;
@@ -26,7 +26,7 @@ export type DNPAYPaymentResponse = {
 }
 
 export type DNPAYPaymentCreationRequest = {
-    amount: number;
+    amount: string;
     currency: string;
     appSessionId: string;
     metadata: PaymentMetadata;

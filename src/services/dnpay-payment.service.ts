@@ -6,8 +6,11 @@ import {
     OrderStatus,
     OrderFailureReason
 } from "@/db/schema";
-import { DNPAYException, InsufficientBalanceException } from "@/exceptions/dnpay.exception";
-import { TokenTransferException } from "@/exceptions/token.exception";
+import {
+    DNPAYException,
+    InsufficientBalanceException,
+    TokenTransferException
+} from "@/exceptions";
 import { AppError } from "@/utils/app.error";
 import { dnpayService } from "@/core/dnpay/dnpay.service";
 import { ryfTokenService } from "@/core/token/ryf-token.service";
@@ -46,7 +49,7 @@ const createPayment = async (paymentData: PaymentData) => {
             orderId: paymentData.orderId,
             appSessionId: paymentData.appSessionId,
             currency: paymentData.currency,
-            amount: paymentData.amount.toString(),
+            amount: paymentData.amount,
             status: paymentIntent.status,
             createdAt: new Date(paymentIntent.createdAt),
             expiresAt: new Date(paymentIntent.expiresAt),
@@ -101,7 +104,8 @@ const confirmDNPAYPayment = async (paymentId: string, payload: any, user: AppVar
             throw new AppError(400, `Payment with ID ${paymentId} has already been confirmed`);
         }
 
-        const transferRequest = await ryfTokenService.createSimulatedTransfer({
+        // Simulate Token Transfer - create the transfer request first
+        await ryfTokenService.createSimulatedTransfer({
             amount: order.amount,
             toAddress: order.userWalletAddress as `0x${string}`,
             orderId: order.id
@@ -113,21 +117,18 @@ const confirmDNPAYPayment = async (paymentId: string, payload: any, user: AppVar
         });
 
         if (confirmationResponse.status !== DNPAY_PAYMENT_STATUS.SUCCEEDED) {
-            throw new AppError(400, `Payment confirmation failed for payment ID ${paymentId}`);
+            throw new DNPAYException();
         }
+
+        const transferData = await ryfTokenService.transferTokenToUser({
+            orderId: order.id,
+            amount: order.amount,
+            toAddress: order.userWalletAddress as `0x${string}`
+        });
 
         await db.update(paymentSchema)
             .set({ status: confirmationResponse.status })
-            .where(eq(paymentSchema.id, paymentId));
-
-        const transferData = await ryfTokenService.transferTokenToUser(
-            {
-                orderId: order.id,
-                amount: order.amount,
-                toAddress: order.userWalletAddress as `0x${string}`
-            },
-            transferRequest
-        );
+            .where(eq(paymentSchema.id, payment.id));
 
         await db.update(orderSchema)
             .set({ status: OrderStatus.COMPLETED })

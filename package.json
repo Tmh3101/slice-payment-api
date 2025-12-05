@@ -3,7 +3,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "tsup", 
+    "build": "tsup",
     "start": "node dist/src/index.js",
     "migrate:gen": "drizzle-kit generate",
     "migrate:push": "drizzle-kit push"
@@ -11,6 +11,7 @@
   "dependencies": {
     "@hono/node-server": "^1.19.6",
     "@hono/zod-validator": "^0.7.5",
+    "async-mutex": "^0.5.0",
     "dotenv": "^17.2.3",
     "drizzle-orm": "^0.44.7",
     "hono": "^4.10.7",
