@@ -13,6 +13,10 @@ export const envConfig = {
   DATABASE_URL: process.env.DATABASE_URL || '',
   DB_SCHEMA: process.env.DB_SCHEMA || 'public',
 
+  MAX_TOKEN_PER_PAYMENT: process.env.MAX_TOKEN_PER_PAYMENT
+    ? parseInt(process.env.MAX_TOKEN_PER_PAYMENT, 10)
+    : 1000,
+
   DNPAY_API_URL: process.env.DNPAY_API_URL,
   DNPAY_API_KEY: process.env.DNPAY_API_KEY,
   DNPAY_API_SECRET: process.env.DNPAY_API_SECRET,
