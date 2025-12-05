@@ -8,6 +8,7 @@ const initRedis = () => {
         if (!envConfig.UPSTASH_REDIS_REST_URL || !envConfig.UPSTASH_REDIS_REST_TOKEN) {
             throw new Error('Upstash Redis configuration is missing');
         }
+        logger.info('[Redis] Initialized with Upstash Redis');
         return new UpstashRedis({
             url: envConfig.UPSTASH_REDIS_REST_URL,
             token: envConfig.UPSTASH_REDIS_REST_TOKEN,
@@ -21,6 +22,8 @@ const initRedis = () => {
 
     redis.on('connect', () => logger.info('[Redis] Connected'));
     redis.on('error', (err) => logger.error({ err }, '[Redis] Error'));
+
+    logger.info('[Redis] Initialized with ioredis');
 
     return redis;
 }
