@@ -1,7 +1,7 @@
 import 'dotenv/config'
 import { serve } from '@hono/node-server'
-import { logger } from '@/utils/logger.js'
-import { createApp } from '@/app.js'
+import { logger } from '@/utils/logger'
+import { createApp } from '@/app'
 
 const app = createApp()
 

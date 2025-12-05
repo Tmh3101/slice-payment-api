@@ -2,9 +2,9 @@ import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { logger as honoLogger } from 'hono/logger'
 import { prettyJSON } from 'hono/pretty-json'
-import { globalErrorHandler, notFoundHandler } from './middlewares/error-handler.js'
-import orderRouter from './routes/order.route.js'
-import dnpayPaymentRoute from './routes/dnpay-payment.route.js'
+import { globalErrorHandler, notFoundHandler } from './middlewares/error-handler'
+import orderRouter from './routes/order.route'
+import dnpayPaymentRoute from './routes/dnpay-payment.route'
 
 export const createApp = () => {
   const app = new Hono()
