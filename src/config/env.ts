@@ -17,6 +17,9 @@ export const envConfig = {
   REDIS_PORT: process.env.REDIS_PORT
     ? parseInt(process.env.REDIS_PORT, 10)
     : 6379,
+  IS_USE_UPSTASH_REDIS: process.env.IS_USE_UPSTASH_REDIS === 'true',
+  UPSTASH_REDIS_REST_URL: process.env.UPSTASH_REDIS_REST_URL,
+  UPSTASH_REDIS_REST_TOKEN: process.env.UPSTASH_REDIS_REST_TOKEN,
 
   MORALIS_API_KEY: process.env.MORALIS_API_KEY!,
 

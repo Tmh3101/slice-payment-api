@@ -8,12 +8,21 @@ import {
     FALLBACK_PRICE
 } from '@/common/constants/price';
 
+const setExpiry = async (key: string, price: number, ttlSeconds: number) => {
+    const redisClient = redis as any;
+    if (envConfig.IS_USE_UPSTASH_REDIS) {
+        await redisClient.set(key, price, { ex: ttlSeconds });
+    } else {
+        await redisClient.set(key, price, 'EX', ttlSeconds);
+    }
+};
+
 export const getTokenPriceUsd = async (tokenAddress: string, symbol: string): Promise<number> => {
     const cacheKey = `price:${tokenAddress.toLowerCase()}`;
 
     // Kiểm tra Cache Redis
     try {
-        const cachedPrice = await redis.get(cacheKey);
+        const cachedPrice = await redis.get<number>(cacheKey);
         if (cachedPrice) {
             logger.info(`[Price] Cache Hit for ${symbol}: $${cachedPrice}`);
             return Number(cachedPrice);
@@ -22,9 +31,7 @@ export const getTokenPriceUsd = async (tokenAddress: string, symbol: string): Pr
         logger.error(`[Price] Redis Error reading ${symbol}`);
     }
 
-    // Gọi Moralis API
     try {
-        // Đảm bảo Moralis đã start (gọi lại cho chắc)
         if (!Moralis.Core.isStarted) {
             await Moralis.start({ apiKey: envConfig.MORALIS_API_KEY });
         }
@@ -37,14 +44,10 @@ export const getTokenPriceUsd = async (tokenAddress: string, symbol: string): Pr
         const price = response.raw.usdPrice;
         logger.info(`[Price] Moralis Fetched ${symbol}: $${price}`);
 
-        // Lưu vào Redis (Set Expiry)
-        await redis.set(cacheKey, price, 'EX', CACHE_TTL);
-
+        await setExpiry(cacheKey, price, CACHE_TTL);
         return price;
     } catch (error: any) {
         logger.warn({ msg: error.message }, `[Price] Moralis failed for ${symbol}. Using Fallback.`);
-        
-        // Fallback (Dùng giá cứng) - Nếu là RYF hoặc VNDC thì lấy giá cứng, còn lại trả về 0
         if (symbol === 'RYF') return FALLBACK_PRICE.RYF;
         if (symbol === 'VNDC') return FALLBACK_PRICE.VNDC;
         return 0;

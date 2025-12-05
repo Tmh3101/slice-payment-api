@@ -1,4 +1,4 @@
-export const CACHE_TTL = 300;
+export const CACHE_TTL = 300; // 5 minutes
 
 export const FALLBACK_PRICE = {
     RYF: 0.056,
